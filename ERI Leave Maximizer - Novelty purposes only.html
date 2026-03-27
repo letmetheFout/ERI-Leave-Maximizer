@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERI Leave Maximizer — Unofficial Planning Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* GoC-inspired palette — not official GoC branding */
+  --goc-red:       #b10e1e;
+  --goc-red-dark:  #7a0915;
+  --goc-red-light: #f9eaec;
+  --goc-black:     #1a1a1a;
+  --goc-dark:      #2b2b2b;
+  --header-bg:     #26374a;   /* GoC web header blue-grey */
+  --header-dark:   #1c2834;
+  --link:          #2b4380;
+  --link-visited:  #7834bc;
+  --focus:         #ffbf47;
+  --white:         #ffffff;
+  --bg:            #f5f5f5;
+  --surface:       #ffffff;
+  --border:        #d3d3d3;
+  --border-dark:   #afafaf;
+  --text:          #333333;
+  --text-muted:    #5c5c5c;
+  --text-light:    #767676;
+  --accent-blue:   #2b4380;
+  --accent-teal:   #1c6975;
+  --success:       #278400;
+  --success-light: #e8f5d9;
+  --warning:       #6e4800;
+  --warning-light: #fef4dd;
+  --error:         #b10e1e;
+  --error-light:   #f3e9ea;
+  --info:          #245c87;
+  --info-light:    #e4eef4;
+  --font:          'Noto Sans', sans-serif;
+  --font-serif:    'Noto Serif', serif;
+  --radius:        4px;
+  --shadow:        0 1px 4px rgba(0,0,0,0.12);
+  --shadow-md:     0 2px 8px rgba(0,0,0,0.15);
+}
+
+html { background: var(--bg); scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+/* ── Skip link (accessibility) ── */
+.skip-link {
+  position: absolute; top: -100%; left: 0;
+  background: var(--focus); color: var(--goc-black);
+  padding: 8px 16px; font-weight: 700; z-index: 9999;
+  text-decoration: none;
+}
+.skip-link:focus { top: 0; }
+
+/* ══════════════════════════════════════════════════════
+   HEADER — GoC web style (dark blue-grey + red bar)
+══════════════════════════════════════════════════════ */
+.site-header {
+  background: var(--header-bg);
+  border-bottom: 3px solid var(--goc-red);
+}
+
+/* Top utility bar */
+.header-utility {
+  background: var(--header-dark);
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.header-utility-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-utility-left {
+  font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.02em;
+}
+.header-utility-right {
+  font-size: 12px; color: rgba(255,255,255,0.55);
+}
+
+/* Main header row */
+.header-main {
+  padding: 14px 0 12px;
+}
+.header-main-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+}
+
+/* Wordmark — uses text, no official Canada wordmark SVG */
+.site-wordmark {
+  display: flex; align-items: center; gap: 12px; text-decoration: none;
+}
+.wordmark-flag {
+  /* Simple maple leaf approximation using CSS — not the official symbol */
+  width: 36px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.wordmark-flag-inner {
+  font-size: 22px; line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+.wordmark-text {
+  font-family: var(--font);
+  font-size: 19px; font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+.wordmark-text em {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  display: block;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.header-version {
+  font-size: 11px; color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 3px 10px; border-radius: 2px;
+}
+
+/* Breadcrumb */
+.breadcrumb-bar {
+  background: var(--header-bg);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 0;
+}
+.breadcrumb-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: rgba(255,255,255,0.5);
+}
+.breadcrumb-inner a { color: rgba(255,255,255,0.7); text-decoration: none; }
+.breadcrumb-inner a:hover { color: #fff; text-decoration: underline; }
+.breadcrumb-sep { opacity: 0.4; }
+.breadcrumb-current { color: rgba(255,255,255,0.85); }
+
+/* ── Disclaimer banner ── */
+.disclaimer-banner {
+  background: #fef4dd;
+  border-left: 5px solid #b54b00;
+  padding: 14px 24px;
+  border-bottom: 1px solid #e8d5a0;
+}
+.disclaimer-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.disclaimer-icon {
+  font-size: 20px; flex-shrink: 0; margin-top: 1px;
+}
+.disclaimer-text {
+  font-size: 14px; color: #5a3600; line-height: 1.6;
+}
+.disclaimer-text strong {
+  display: block; font-size: 15px; margin-bottom: 3px; color: #3d2400;
+}
+
+/* ══════════════════════════════════════════════════════
+   PAGE TITLE BAND
+══════════════════════════════════════════════════════ */
+.page-title-band {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 0 24px;
+}
+.page-title-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px;
+}
+.page-title-inner h1 {
+  font-family: var(--font);
+  font-size: 28px; font-weight: 700;
+  color: var(--goc-black);
+  line-height: 1.2; margin-bottom: 8px;
+  border-bottom: none;
+}
+.page-title-inner .page-subtitle {
+  font-size: 15px; color: var(--text-muted);
+  max-width: 680px; line-height: 1.6;
+}
+.page-meta {
+  display: flex; align-items: center; gap: 16px;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--text-light);
+  flex-wrap: wrap;
+}
+.page-meta-item { display: flex; align-items: center; gap: 5px; }
+.page-meta-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--goc-red); display: inline-block; flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   MAIN LAYOUT
+══════════════════════════════════════════════════════ */
+.page-main {
+  max-width: 1200px; margin: 0 auto;
+  padding: 28px 24px 60px;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 28px; align-items: start;
+}
+@media (max-width: 900px) { .page-main { grid-template-columns: 1fr; } }
+
+/* ══════════════════════════════════════════════════════
+   CARDS / PANELS
+══════════════════════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.card-header {
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--white);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.card-header h2 {
+  font-size: 15px; font-weight: 700;
+  color: var(--goc-black); letter-spacing: 0.01em;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-header h2 .section-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--header-bg); color: white;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.card-header p {
+  font-size: 13px; color: var(--text-muted); margin-top: 4px;
+}
+.card-body { padding: 20px; }
+
+/* ══════════════════════════════════════════════════════
+   ACCORDION
+══════════════════════════════════════════════════════ */
+.accordion {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+}
+.accordion.is-open {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px rgba(43,67,128,0.12), var(--shadow);
+}
+.accordion-trigger {
+  width: 100%; background: var(--white);
+  border: none; cursor: pointer;
+  padding: 13px 16px;
+  display: flex; align-items: center; gap: 12px;
+  text-align: left;
+  transition: background 0.12s;
+}
+.accordion-trigger:hover { background: #f8f9fc; }
+.accordion-trigger:focus { outline: 3px solid var(--focus); outline-offset: -3px; }
+.accordion.is-open .accordion-trigger { background: #eef1f8; }
+.acc-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  background: var(--border); color: var(--text-muted);
+  font-size: 11px; font-weight: 700;
+  transition: background 0.15s, color 0.15s;
+}
+.accordion.is-open .acc-num { background: var(--header-bg); color: white; }
+.accordion.is-complete .acc-num { background: var(--success); color: white; }
+.acc-title-wrap { flex: 1; min-width: 0; }
+.acc-title { font-size: 14px; font-weight: 700; color: var(--goc-black); }
+.acc-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.acc-summary { font-size: 12px; color: var(--accent-blue); font-weight: 600; margin-top: 1px; display: none; }
+.accordion.is-complete:not(.is-open) .acc-summary { display: block; }
+.accordion.is-complete:not(.is-open) .acc-subtitle { display: none; }
+.acc-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 10px; background: var(--success-light);
+  color: var(--success); border: 1px solid #b8dba8;
+  white-space: nowrap; display: none; flex-shrink: 0;
+}
+.accordion.is-complete .acc-badge { display: inline-block; }
+.accordion.is-open .acc-badge { display: none; }
+.acc-chevron {
+  width: 18px; height: 18px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s;
+}
+.acc-chevron svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.accordion.is-open .acc-chevron { transform: rotate(180deg); }
+.acc-border { height: 1px; background: var(--border); }
+.accordion.is-open .acc-border { background: #b0c4e8; }
+.accordion-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.28s cubic-bezier(0.4,0,0.2,1);
+  background: var(--white);
+}
+.accordion.is-open .accordion-body { max-height: 2000px; }
+.accordion-body-inner { padding: 18px 16px 20px; }
+
+/* ══════════════════════════════════════════════════════
+   FORM ELEMENTS
+══════════════════════════════════════════════════════ */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field > label {
+  display: block; font-size: 14px; font-weight: 600;
+  color: var(--text); margin-bottom: 5px;
+}
+.field .field-hint {
+  font-size: 13px; color: var(--text-muted);
+  display: block; margin-bottom: 5px;
+}
+.field input[type="text"],
+.field input[type="number"],
+.field input[type="date"],
+.field select {
+  width: 100%; padding: 8px 12px;
+  border: 2px solid var(--border-dark);
+  border-radius: var(--radius);
+  font-family: var(--font); font-size: 15px;
+  color: var(--text); background: var(--white);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none; appearance: none;
+}
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(43,67,128,0.2);
+}
+.field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23333' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Age derived */
+.age-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+.age-derived {
+  padding: 8px 12px;
+  background: var(--info-light); border: 2px solid #b0cce0;
+  border-radius: var(--radius); font-size: 14px;
+  color: var(--info); font-weight: 600;
+}
+
+/* ── Deadline auto-panel ── */
+.deadline-auto {
+  background: var(--info-light); border: 1px solid #b0cce0;
+  border-radius: var(--radius); padding: 14px 16px; margin-top: 12px;
+  display: none;
+}
+.deadline-auto.visible { display: block; }
+.deadline-auto-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--info); margin-bottom: 10px;
+}
+.deadline-auto-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.deadline-auto-item label {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  display: block; margin-bottom: 3px;
+}
+.deadline-auto-item span { font-size: 13px; font-weight: 700; color: var(--text); }
+.deadline-auto-item span.critical { color: var(--error); }
+
+/* ══════════════════════════════════════════════════════
+   LEAVE ROWS
+══════════════════════════════════════════════════════ */
+.leave-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: var(--bg);
+  transition: border-color 0.15s, background 0.15s;
+}
+.leave-row:hover { border-color: var(--border-dark); }
+.leave-row.has-value {
+  background: #f0f5ff; border-color: #b0c4e8;
+}
+.leave-row-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.leave-color-bar {
+  width: 4px; height: 32px; border-radius: 2px; flex-shrink: 0;
+}
+.leave-row-header strong {
+  font-size: 14px; font-weight: 700; flex: 1; color: var(--text);
+}
+.leave-row-inputs {
+  display: grid; grid-template-columns: 1fr 1fr 80px; gap: 8px; align-items: end;
+}
+.leave-row-inputs label {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  display: block; margin-bottom: 3px;
+}
+.leave-row-inputs input {
+  width: 100%; padding: 6px 10px;
+  border: 1px solid var(--border-dark); border-radius: var(--radius);
+  font-size: 14px; font-family: var(--font);
+  background: var(--white); color: var(--text);
+}
+.leave-row-inputs input:focus {
+  outline: none; border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px rgba(43,67,128,0.15);
+}
+.leave-row-inputs input[readonly] {
+  background: #f5f5f5; color: var(--text-light); cursor: default;
+}
+.other-label-input {
+  margin-top: 8px; width: 100%; padding: 6px 10px;
+  border: 1px solid var(--border-dark); border-radius: var(--radius);
+  font-size: 13px; font-family: var(--font); color: var(--text);
+  background: var(--white);
+}
+
+/* ── Pensionable toggle ── */
+.pen-wrap {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.toggle { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--border-dark); border-radius: 10px; cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-thumb {
+  position: absolute; width: 14px; height: 14px;
+  top: 3px; left: 3px; background: white; border-radius: 50%;
+  transition: transform 0.2s; pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle input:checked ~ .toggle-track { background: var(--accent-blue); }
+.toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
+.toggle input:focus ~ .toggle-track { box-shadow: 0 0 0 3px rgba(43,67,128,0.25); }
+
+/* ── Sick leave ── */
+.sick-panel {
+  margin-top: 10px; padding: 12px 14px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.sick-panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.sick-panel-row label {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  display: block; margin-bottom: 3px;
+}
+.sick-panel-row input {
+  width: 100%; padding: 6px 10px;
+  border: 1px solid var(--border-dark); border-radius: var(--radius);
+  font-size: 14px; font-family: var(--font);
+}
+.sick-note {
+  font-size: 12px; color: var(--text-muted); line-height: 1.55;
+  border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;
+  font-style: italic;
+}
+
+/* ── Accrual ── */
+.accrual-panel {
+  display: none; align-items: center; gap: 12px;
+  padding: 10px 12px; margin-top: 8px;
+  background: #f0f9f0; border: 1px solid #b0d8b0; border-radius: var(--radius);
+}
+.accrual-panel.visible { display: flex; }
+.accrual-panel label { font-size: 13px; font-weight: 600; color: var(--accent-teal); flex: 1; }
+.accrual-panel input {
+  width: 90px; padding: 6px 10px;
+  border: 1px solid #7ab87a; border-radius: var(--radius);
+  font-size: 14px; font-family: var(--font);
+}
+
+/* ══════════════════════════════════════════════════════
+   ALERTS
+══════════════════════════════════════════════════════ */
+.alert {
+  padding: 12px 16px; border-radius: var(--radius);
+  font-size: 14px; line-height: 1.6; margin-bottom: 12px;
+  display: flex; align-items: flex-start; gap: 10px;
+  border-left: 4px solid;
+}
+.alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.alert-content { flex: 1; }
+.alert-content strong { display: block; font-size: 15px; margin-bottom: 2px; }
+.alert-good    { background: var(--success-light); border-color: var(--success); color: #1a4d00; }
+.alert-warn    { background: var(--warning-light); border-color: #b54b00; color: var(--warning); }
+.alert-error   { background: var(--error-light);   border-color: var(--error); color: #6b0010; }
+.alert-info    { background: var(--info-light);     border-color: var(--info); color: #133350; }
+.alert-cutting {
+  background: #fff3cd; border-color: #cc8800; color: #5a3a00;
+  border-left-width: 4px; animation: pulse-warn 2s ease-in-out infinite;
+}
+@keyframes pulse-warn {
+  0%,100% { border-color: #cc8800; }
+  50%      { border-color: #ff9900; }
+}
+
+/* ══════════════════════════════════════════════════════
+   SUBMIT BUTTON
+══════════════════════════════════════════════════════ */
+.btn-calculate {
+  display: block; width: 100%; padding: 14px 20px;
+  background: var(--header-bg); color: white;
+  border: none; border-radius: var(--radius);
+  font-family: var(--font); font-size: 16px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.02em;
+  transition: background 0.15s, box-shadow 0.15s;
+  box-shadow: var(--shadow);
+  position: relative; overflow: hidden;
+}
+.btn-calculate::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: var(--goc-red);
+}
+.btn-calculate:hover {
+  background: var(--header-dark);
+  box-shadow: var(--shadow-md);
+}
+.btn-calculate:focus {
+  outline: 3px solid var(--focus); outline-offset: 2px;
+}
+.btn-calculate:active { transform: translateY(1px); }
+
+/* ══════════════════════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════════════════════ */
+.empty-state {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 48px 32px;
+  text-align: center; box-shadow: var(--shadow);
+}
+.empty-icon { font-size: 40px; margin-bottom: 14px; opacity: 0.4; }
+.empty-state h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.empty-state p  { font-size: 14px; color: var(--text-muted); max-width: 320px; margin: 0 auto; line-height: 1.6; }
+
+/* ══════════════════════════════════════════════════════
+   RESULTS — DEADLINE SUMMARY BAR
+══════════════════════════════════════════════════════ */
+.deadline-summary {
+  background: var(--header-bg); color: white;
+  border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
+}
+.deadline-summary-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: rgba(255,255,255,0.6); margin-bottom: 12px;
+}
+.deadline-summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.ds-item label { font-size: 11px; color: rgba(255,255,255,0.55); display: block; margin-bottom: 3px; font-weight: 600; }
+.ds-item span  { font-size: 14px; font-weight: 700; color: white; }
+.ds-item span.critical { color: #ff9999; }
+
+/* ══════════════════════════════════════════════════════
+   SCENARIO CARDS
+══════════════════════════════════════════════════════ */
+.scenarios-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 16px; margin-bottom: 20px;
+}
+@media (max-width: 1080px) { .scenarios-grid { grid-template-columns: 1fr; } }
+
+.scenario-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.scenario-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.scenario-card.sc-recommended {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px rgba(43,67,128,0.15), var(--shadow);
+}
+.scenario-card.sc-danger { border-color: var(--error); }
+
+/* Card header stripe */
+.sc-header {
+  padding: 10px 16px 9px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.scenario-card.sc-recommended .sc-header { background: #eef1f8; }
+.scenario-card.sc-danger      .sc-header { background: var(--error-light); }
+
+.sc-type-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-light);
+  display: block; margin-bottom: 2px;
+}
+.sc-name { font-size: 16px; font-weight: 700; color: var(--text); }
+.sc-sub  { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+.sc-badge {
+  font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 12px; letter-spacing: 0.03em; white-space: nowrap; flex-shrink: 0;
+}
+.sc-badge-rec  { background: var(--accent-blue); color: white; }
+.sc-badge-norm { background: #e8e8e8; color: var(--text-muted); }
+.sc-badge-bust { background: var(--error); color: white; }
+
+.sc-body { padding: 16px; }
+
+/* Stats table */
+.stat-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.stat-table tr { border-bottom: 1px solid #f0f0f0; }
+.stat-table tr:last-child { border-bottom: none; }
+.stat-table td { padding: 6px 0; vertical-align: top; }
+.stat-table .stat-label {
+  font-size: 12px; color: var(--text-muted); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  width: 48%; padding-right: 8px;
+}
+.stat-table .stat-val {
+  font-size: 14px; font-weight: 700; color: var(--text);
+}
+.stat-table .stat-val.highlight { color: var(--accent-blue); }
+.stat-table .stat-val.success   { color: var(--success); }
+.stat-table .stat-val.danger    { color: var(--error); }
+.stat-table .stat-val.warning   { color: #b54b00; }
+
+/* Leave sequence */
+.leave-seq-head {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-muted);
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.leave-block-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 8px; border-radius: var(--radius); margin-bottom: 4px;
+  font-size: 12px; border-left: 3px solid transparent;
+}
+.leave-block-row .lb-name  { font-weight: 700; }
+.leave-block-row .lb-right { text-align: right; }
+.leave-block-row .lb-days  { font-weight: 700; font-size: 13px; }
+.leave-block-row .lb-dates { font-size: 10px; color: var(--text-muted); display: block; }
+
+/* Wasted resources */
+.wasted-panel {
+  margin-top: 12px; padding: 10px 12px;
+  background: #fff5f5; border: 1px solid #f0c0c0; border-radius: var(--radius);
+}
+.wasted-panel.clean { background: #f0f9f0; border-color: #b0d8b0; }
+.wasted-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--error); margin-bottom: 3px; }
+.wasted-panel.clean .wasted-label { color: var(--success); }
+.wasted-value { font-size: 13px; font-weight: 700; color: #8b0000; }
+.wasted-panel.clean .wasted-value { color: var(--success); font-size: 12px; }
+
+/* ══════════════════════════════════════════════════════
+   TIMELINE
+══════════════════════════════════════════════════════ */
+.timeline-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.timeline-card h3 {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  margin-bottom: 18px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--goc-red);
+  display: inline-block;
+}
+.tl-row { margin-bottom: 22px; }
+.tl-row-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; font-weight: 700; color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.tl-bar-wrap { position: relative; margin-top: 20px; }
+.tl-bar {
+  height: 28px; background: #f5f5f5;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  position: relative;
+}
+.tl-seg {
+  position: absolute; top: 0; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; overflow: hidden;
+  white-space: nowrap; border-radius: 2px;
+  color: rgba(255,255,255,0.9);
+}
+.tl-deadline {
+  position: absolute; top: 0; bottom: 0; width: 2px;
+  background: var(--error); z-index: 10;
+}
+.tl-deadline-label {
+  position: absolute; bottom: calc(100% + 4px);
+  left: 50%; transform: translateX(-50%);
+  font-size: 10px; font-weight: 700; color: var(--error);
+  white-space: nowrap; background: var(--white);
+  padding: 1px 4px; border-radius: 2px;
+}
+.tl-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.tl-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.tl-legend-dot  { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════════
+   NOTES CARD
+══════════════════════════════════════════════════════ */
+.notes-card {
+  background: #f9f9f9; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px;
+  box-shadow: var(--shadow);
+}
+.notes-card h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 10px; }
+.notes-card ul { padding-left: 18px; }
+.notes-card li { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 4px; }
+
+/* ══════════════════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════════════════ */
+.site-footer {
+  background: var(--header-dark); color: rgba(255,255,255,0.55);
+  border-top: 3px solid var(--goc-red); margin-top: 0;
+}
+.footer-inner {
+  max-width: 1200px; margin: 0 auto; padding: 24px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
+}
+.footer-left { font-size: 12px; line-height: 1.7; }
+.footer-left strong { color: rgba(255,255,255,0.8); display: block; margin-bottom: 4px; }
+.footer-right { font-size: 11px; text-align: right; color: rgba(255,255,255,0.35); }
+
+/* ── Misc ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.footnote { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-top: 8px; font-style: italic; }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-utility">
+    <div class="header-utility-inner">
+      <span class="header-utility-left">Federal Public Service · Pension Planning</span>
+      <span class="header-utility-right">Unofficial Tool — Not Government of Canada</span>
+    </div>
+  </div>
+  <div class="header-main">
+    <div class="header-main-inner">
+      <div class="site-wordmark">
+        <div class="wordmark-flag">
+          <span class="wordmark-flag-inner">🍁</span>
+        </div>
+        <div class="wordmark-text">
+          ERI Leave Maximizer
+          <em>Unofficial Planning Tool</em>
+        </div>
+      </div>
+      <div class="header-version">v1.2.0-FIP-B</div>
+    </div>
+  </div>
+  <div class="breadcrumb-bar">
+    <div class="breadcrumb-inner">
+      <a href="#">Home</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href="#">Pension Planning</a>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">ERI Leave Maximizer</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══ DISCLAIMER ══════════════════════════════════════════════════════ -->
+<div class="disclaimer-banner">
+  <div class="disclaimer-inner">
+    <span class="disclaimer-icon">⚠️</span>
+    <div class="disclaimer-text">
+      <strong>This is an unofficial planning tool — not produced by or affiliated with the Government of Canada.</strong>
+      This tool is designed to help federal public servants estimate leave and pension scenarios under the proposed Early Retirement Incentive (ERI) program. It does not constitute official advice. All results should be verified with your departmental Human Resources team and the <a href="https://www.tpsgc-pwgsc.gc.ca/remuneration-compensation/services-pension-services/pension/index-eng.html" style="color:#5a3600;">Government of Canada Pension Centre</a> before making any decisions.
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE TITLE ══════════════════════════════════════════════════════ -->
+<div class="page-title-band">
+  <div class="page-title-inner">
+    <h1>Early Retirement Incentive — Leave Maximizer</h1>
+    <p class="page-subtitle">
+      Enter your profile details and leave balances to calculate and compare three departure scenarios under the proposed ERI program. The tool identifies the optimal last day of work to maximise paid leave before your cease-to-be-employed date.
+    </p>
+    <div class="page-meta">
+      <span class="page-meta-item"><span class="page-meta-dot"></span>Based on Bill C-15, Division 7</span>
+      <span class="page-meta-item"><span class="page-meta-dot"></span>Public Service Superannuation Act</span>
+      <span class="page-meta-item"><span class="page-meta-dot"></span>Group 1 &amp; Group 2 members</span>
+      <span class="page-meta-item"><span class="page-meta-dot"></span>Updated: March 2026</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN ════════════════════════════════════════════════════════════ -->
+<main id="main-content">
+<div class="page-main">
+
+  <!-- ══ LEFT COLUMN ═══════════════════════════════════════════════════ -->
+  <div>
+
+  <!-- Accordion 1: Program Dates -->
+  <div class="accordion is-open" id="acc-dates">
+    <button class="accordion-trigger" onclick="toggleAccordion('acc-dates')" aria-expanded="true">
+      <span class="acc-num">1</span>
+      <span class="acc-title-wrap">
+        <span class="acc-title">Program Dates</span>
+        <span class="acc-subtitle">Royal Assent and approval dates</span>
+        <span class="acc-summary" id="acc-dates-summary"></span>
+      </span>
+      <span class="acc-badge">✓ Done</span>
+      <span class="acc-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+    </button>
+    <div class="acc-border"></div>
+    <div class="accordion-body">
+      <div class="accordion-body-inner">
+        <div class="field">
+          <label for="royalAssent">Royal Assent Date</label>
+          <input type="date" id="royalAssent">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="approvalDate">Expected Deputy Head Approval Date</label>
+          <span class="field-hint">The date you expect your application to be approved by your Deputy Head.</span>
+          <input type="date" id="approvalDate">
+        </div>
+        <div class="deadline-auto" id="deadlinePanel">
+          <div class="deadline-auto-title">Auto-Calculated Deadlines</div>
+          <div class="deadline-auto-grid">
+            <div class="deadline-auto-item"><label>Legislation in force</label><span id="dl-inforce">—</span></div>
+            <div class="deadline-auto-item"><label>TB Approval cutoff (day 120)</label><span id="dl-120">—</span></div>
+            <div class="deadline-auto-item"><label>Last day to cease employment (day 300)</label><span class="critical" id="dl-300">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accordion 2: Your Profile -->
+  <div class="accordion" id="acc-profile">
+    <button class="accordion-trigger" onclick="toggleAccordion('acc-profile')" aria-expanded="false">
+      <span class="acc-num">2</span>
+      <span class="acc-title-wrap">
+        <span class="acc-title">Your Profile</span>
+        <span class="acc-subtitle">Pension group, age, service and salary</span>
+        <span class="acc-summary" id="acc-profile-summary"></span>
+      </span>
+      <span class="acc-badge">✓ Done</span>
+      <span class="acc-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+    </button>
+    <div class="acc-border"></div>
+    <div class="accordion-body">
+      <div class="accordion-body-inner">
+        <div class="field-row">
+          <div class="field">
+            <label for="group">Pension Group</label>
+            <select id="group">
+              <option value="">— Select —</option>
+              <option value="1">Group 1 (joined on or before Dec 31, 2012)</option>
+              <option value="2">Group 2 (joined on or after Jan 1, 2013)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="birthdate">Date of Birth</label>
+            <input type="date" id="birthdate" min="1972-01-01" max="1996-12-31">
+          </div>
+        </div>
+        <div class="field">
+          <label>Age at Estimated CTBE Date</label>
+          <span class="field-hint">Calculated automatically from your date of birth and projected cease-to-employ date.</span>
+          <div class="age-row">
+            <div class="age-derived" id="ageDerived">— enter date of birth above</div>
+            <input type="number" id="age" min="45" max="75" placeholder="or enter manually">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="yearsEmployment">Years of PS Employment</label>
+            <input type="number" id="yearsEmployment" min="0" max="45" placeholder="e.g. 22" step="0.5">
+          </div>
+          <div class="field">
+            <label for="yearsPensionable">Years of Pensionable Service</label>
+            <input type="number" id="yearsPensionable" min="0" max="45" placeholder="e.g. 20" step="0.5">
+          </div>
+        </div>
+        <div class="field">
+          <label for="salary">Annual Salary ($)</label>
+          <input type="number" id="salary" min="0" placeholder="e.g. 95,000">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="lastDayWork">Custom Last Day of Work</label>
+          <span class="field-hint">Optional. Leave blank to let the tool calculate the optimal date.</span>
+          <input type="date" id="lastDayWork">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accordion 3: Leave Balances -->
+  <div class="accordion" id="acc-leave">
+    <button class="accordion-trigger" onclick="toggleAccordion('acc-leave')" aria-expanded="false">
+      <span class="acc-num">3</span>
+      <span class="acc-title-wrap">
+        <span class="acc-title">Leave Balances</span>
+        <span class="acc-subtitle">Vacation, sick, personal and other leave</span>
+        <span class="acc-summary" id="acc-leave-summary"></span>
+      </span>
+      <span class="acc-badge">✓ Done</span>
+      <span class="acc-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+    </button>
+    <div class="acc-border"></div>
+    <div class="accordion-body">
+      <div class="accordion-body-inner">
+        <div id="leaveRows"></div>
+        <div class="divider"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <label class="toggle" for="accrualToggle">
+            <input type="checkbox" id="accrualToggle">
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+          <span style="font-size:13px;font-weight:600;color:var(--text);">Account for vacation accrual during leave period</span>
+        </div>
+        <div class="accrual-panel" id="accrualPanel">
+          <label for="accrualRate">Accrual rate (days per month)</label>
+          <input type="number" id="accrualRate" value="1.25" step="0.25" min="0" max="5">
+        </div>
+        <p class="footnote" style="margin-top:10px;">All leave amounts are calculated in calendar days. Weekends and statutory holidays are included. Actual payroll treatment may vary — confirm with your collective agreement and the Pension Centre.</p>
+      </div>
+    </div>
+  </div>
+
+    <button class="btn-calculate" onclick="calculate()">
+      Calculate Scenarios →
+    </button>
+
+  </div>
+
+  <!-- ══ RIGHT COLUMN ════════════════════════════════════════════════════ -->
+  <div id="results">
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h3>Results will appear here</h3>
+      <p>Complete the fields on the left and click <strong>Calculate Scenarios</strong> to see your three departure options.</p>
+    </div>
+  </div>
+
+</div><!-- /page-main -->
+</main>
+
+<!-- ══ FOOTER ══════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <strong>ERI Leave Maximizer — Unofficial Planning Tool</strong>
+      This tool is not affiliated with, endorsed by, or produced by the Government of Canada or any federal department or agency.
+      Information is provided for planning purposes only and does not constitute legal, financial, or pension advice.
+      Verify all information with your departmental HR and the Government of Canada Pension Centre before making decisions.
+    </div>
+    <div class="footer-right">
+      v1.2.0-FIP<br>
+      Based on Bill C-15, Division 7<br>
+      Public Service Superannuation Act
+    </div>
+  </div>
+</footer>
+
+<script>
+'use strict';
+
+const VERSION = 'v1.2.0-FIP';
+const JAN_15_2026 = new Date(2026, 0, 15);
+const WORKDAYS_PER_WEEK = 5;
+const CAL_DAYS_PER_WEEK = 7;
+
+const LEAVE_TYPES = [
+  { id:'vacation',     label:'Vacation Leave',      unit:'weeks', pensionable:true,  color:'#1a5c3a', bg:'rgba(26,92,58,0.08)'   },
+  { id:'sick',         label:'Sick Leave',           unit:'days',  pensionable:true,  color:'#1e4d8c', bg:'rgba(30,77,140,0.08)'  },
+  { id:'personal',     label:'Personal Leave',       unit:'days',  pensionable:true,  color:'#5a1e8c', bg:'rgba(90,30,140,0.08)'  },
+  { id:'compensatory', label:'Compensatory (Lieu)',  unit:'days',  pensionable:true,  color:'#8c4a1e', bg:'rgba(140,74,30,0.08)'  },
+  { id:'oneTime',      label:'One-Time Leave',       unit:'days',  pensionable:true,  color:'#1e6e8c', bg:'rgba(30,110,140,0.08)' },
+  { id:'other',        label:'Other Leave',          unit:'days',  pensionable:false, color:'#555555', bg:'rgba(85,85,85,0.06)'   },
+];
+
+// ─── Date utilities ───────────────────────────────────────────────────────────
+function parseDate(s) {
+  if (!s) return null;
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function addDays(date, n) {
+  const d = new Date(date); d.setDate(d.getDate() + n); return d;
+}
+function daysBetween(a, b) {
+  return Math.round((b.getTime() - a.getTime()) / 864e5);
+}
+function fmtDate(d) {
+  return d ? d.toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' }) : '—';
+}
+function fmtDateShort(d) {
+  return d ? d.toLocaleDateString('en-CA', { month:'short', day:'numeric', year:'2-digit' }) : '—';
+}
+function computeInForce(ra) {
+  return ra > JAN_15_2026 ? new Date(ra) : new Date(JAN_15_2026);
+}
+function wdToCal(wd) { return Math.round(wd * CAL_DAYS_PER_WEEK / WORKDAYS_PER_WEEK); }
+
+// ─── Live deadline panel ──────────────────────────────────────────────────────
+document.getElementById('royalAssent').addEventListener('input', function () {
+  const ra = parseDate(this.value);
+  if (!ra) { document.getElementById('deadlinePanel').classList.remove('visible'); return; }
+  const inf = computeInForce(ra);
+  document.getElementById('dl-inforce').textContent = fmtDate(inf);
+  document.getElementById('dl-120').textContent     = fmtDate(addDays(inf, 120));
+  document.getElementById('dl-300').textContent     = fmtDate(addDays(inf, 300));
+  document.getElementById('deadlinePanel').classList.add('visible');
+  updateDerivedAge();
+});
+
+document.getElementById('accrualToggle').addEventListener('change', function () {
+  document.getElementById('accrualPanel').classList.toggle('visible', this.checked);
+});
+
+// ─── Birthdate → age ──────────────────────────────────────────────────────────
+function calcAgeAt(bd, ref) {
+  if (!bd || !ref) return null;
+  let age = ref.getFullYear() - bd.getFullYear();
+  const md = ref.getMonth() - bd.getMonth();
+  if (md < 0 || (md === 0 && ref.getDate() < bd.getDate())) age--;
+  return age;
+}
+
+function updateDerivedAge() {
+  const bd  = parseDate(document.getElementById('birthdate').value);
+  const ra  = parseDate(document.getElementById('royalAssent').value);
+  const ap  = parseDate(document.getElementById('approvalDate').value);
+  const el  = document.getElementById('ageDerived');
+  if (!bd) { el.textContent = '— enter date of birth above'; el.style.color = ''; return; }
+  if (bd < new Date(1972,0,1) || bd > new Date(1996,11,31)) {
+    el.textContent = '⚠ Outside eligible date range (1972–1996)';
+    el.style.color = 'var(--error)';
+    document.getElementById('age').value = '';
+    return;
+  }
+  el.style.color = '';
+  const inf     = ra ? computeInForce(ra) : null;
+  const dl300   = inf ? addDays(inf, 300) : null;
+  const ref     = dl300 || ap || new Date();
+  const age     = calcAgeAt(bd, ref);
+  if (age === null) { el.textContent = '— enter date of birth above'; return; }
+  el.textContent = `${age} years old at estimated CTBE`;
+  document.getElementById('age').value = age;
+}
+
+document.getElementById('birthdate').addEventListener('input', updateDerivedAge);
+document.getElementById('approvalDate').addEventListener('input', updateDerivedAge);
+
+// ─── Leave row builder ────────────────────────────────────────────────────────
+function buildLeaveRows() {
+  const container = document.getElementById('leaveRows');
+  container.innerHTML = '';
+
+  LEAVE_TYPES.forEach(lt => {
+    const pLabel = lt.unit === 'weeks' ? 'Balance (weeks)' : 'Balance (days)';
+    const aLabel = lt.unit === 'weeks' ? 'Equivalent (days)' : 'Equivalent (weeks)';
+
+    const row = document.createElement('div');
+    row.className = 'leave-row';
+    row.id = `leaverow-${lt.id}`;
+    row.innerHTML = `
+      <div class="leave-row-header">
+        <span class="leave-color-bar" style="background:${lt.color};"></span>
+        <strong>${lt.label}</strong>
+        <div class="pen-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="pen-${lt.id}" ${lt.pensionable ? 'checked' : ''}>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+          <span>Pensionable</span>
+        </div>
+      </div>
+      <div class="leave-row-inputs">
+        <div>
+          <label for="bal-${lt.id}">${pLabel}</label>
+          <input type="number" id="bal-${lt.id}" min="0" step="${lt.unit === 'weeks' ? 0.5 : 1}" placeholder="0">
+        </div>
+        <div>
+          <label for="bal-${lt.id}-alt">${aLabel}</label>
+          <input type="number" id="bal-${lt.id}-alt" min="0" step="0.1" placeholder="0">
+        </div>
+        <div>
+          <label>Cal. days</label>
+          <input type="number" id="bal-${lt.id}-cal" min="0" placeholder="0" readonly tabindex="-1">
+        </div>
+      </div>
+      ${lt.id === 'sick' ? `
+        <div class="sick-panel" id="sick-controls">
+          <div class="sick-panel-row">
+            <div>
+              <label for="sick-planned-days">Days you plan to use</label>
+              <input type="number" id="sick-planned-days" min="0" step="1" placeholder="e.g. 15">
+            </div>
+            <div>
+              <label>Calendar days (planned)</label>
+              <input type="number" id="sick-planned-cal" min="0" placeholder="0" readonly tabindex="-1" style="background:#f5f5f5;color:var(--text-light);">
+            </div>
+          </div>
+          <div class="sick-note">
+            Most collective agreements permit up to five consecutive days of uncertified sick leave. Absences beyond that threshold will likely require a medical certificate. Factor this into your planning and consult your physician if applicable.
+          </div>
+        </div>` : ''}
+      ${lt.id === 'other' ? `<input type="text" class="other-label-input" id="other-label" placeholder="Describe this leave type…">` : ''}
+    `;
+    container.appendChild(row);
+
+    const primary = document.getElementById(`bal-${lt.id}`);
+    const alt     = document.getElementById(`bal-${lt.id}-alt`);
+    const cal     = document.getElementById(`bal-${lt.id}-cal`);
+
+    primary.addEventListener('input', () => {
+      const v  = parseFloat(primary.value) || 0;
+      const wd = lt.unit === 'weeks' ? v * WORKDAYS_PER_WEEK : v;
+      alt.value = v > 0 ? (lt.unit === 'weeks' ? (v * WORKDAYS_PER_WEEK).toFixed(0) : (v / WORKDAYS_PER_WEEK).toFixed(2)) : '';
+      cal.value = v > 0 ? wdToCal(wd) : '';
+      row.classList.toggle('has-value', v > 0);
+    });
+    alt.addEventListener('input', () => {
+      const v  = parseFloat(alt.value) || 0;
+      const wd = lt.unit === 'weeks' ? v : v * WORKDAYS_PER_WEEK;
+      primary.value = v > 0 ? (lt.unit === 'weeks' ? (v / WORKDAYS_PER_WEEK).toFixed(2) : (v * WORKDAYS_PER_WEEK).toFixed(0)) : '';
+      cal.value = v > 0 ? wdToCal(wd) : '';
+      row.classList.toggle('has-value', v > 0);
+    });
+    if (lt.id === 'sick') {
+      document.getElementById('sick-planned-days').addEventListener('input', function () {
+        const wd = parseFloat(this.value) || 0;
+        document.getElementById('sick-planned-cal').value = wd > 0 ? wdToCal(wd) : '';
+      });
+    }
+  });
+}
+
+// ─── Leave balances ───────────────────────────────────────────────────────────
+function getLeaveBalances() {
+  const sickPlan = parseFloat(document.getElementById('sick-planned-days').value) || 0;
+  return LEAVE_TYPES.map(lt => {
+    const p  = parseFloat(document.getElementById(`bal-${lt.id}`).value) || 0;
+    let wd   = lt.unit === 'weeks' ? p * WORKDAYS_PER_WEEK : p;
+    let plannedWd = null;
+    if (lt.id === 'sick' && sickPlan > 0) {
+      plannedWd = Math.min(sickPlan, wd); wd = plannedWd;
+    }
+    const calDays    = wdToCal(wd);
+    const pensionable = document.getElementById(`pen-${lt.id}`).checked;
+    const label = lt.id === 'other'
+      ? (document.getElementById('other-label').value.trim() || 'Other Leave')
+      : lt.label;
+    return { ...lt, label, workdays: wd, calDays, pensionable, plannedWd };
+  }).filter(lt => lt.calDays > 0);
+}
+
+function sortLeaveOptimal(leaves) {
+  const np = leaves.filter(l => !l.pensionable).sort((a,b) => b.calDays - a.calDays);
+  const p  = leaves.filter(l =>  l.pensionable).sort((a,b) => b.calDays - a.calDays);
+  return [...np, ...p];
+}
+
+function estimateAccrual(leaves, rate) {
+  const total = leaves.reduce((s,l) => s + l.calDays, 0);
+  return wdToCal((total / 30.44) * rate);
+}
+
+// ─── Build scenario ───────────────────────────────────────────────────────────
+function buildScenario(ldw, leaves, extraVac, salary, dl300) {
+  const aug = leaves.map(l => l.id === 'vacation' && extraVac > 0
+    ? { ...l, calDays: l.calDays + extraVac, accruedDays: extraVac }
+    : { ...l, accruedDays: 0 });
+  if (!aug.some(l => l.id === 'vacation') && extraVac > 0)
+    aug.push({ ...LEAVE_TYPES[0], calDays: extraVac, accruedDays: extraVac, pensionable: true });
+
+  const sorted = sortLeaveOptimal(aug);
+  let cursor = addDays(ldw, 1);
+  const blocks = []; let totalCal = 0, totalPen = 0;
+
+  sorted.forEach(lt => {
+    if (lt.calDays <= 0) return;
+    const start = new Date(cursor), end = addDays(cursor, lt.calDays - 1);
+    blocks.push({ ...lt, start, end });
+    totalCal += lt.calDays;
+    if (lt.pensionable) totalPen += lt.calDays;
+    cursor = addDays(end, 1);
+  });
+
+  const ldop = blocks.length > 0 ? blocks[blocks.length-1].end : new Date(ldw);
+  const ctbe = addDays(ldop, 1);
+  const buf  = dl300 ? daysBetween(ctbe, dl300) : null;
+  const over = dl300 ? ctbe > dl300 : false;
+  const sal  = Math.round((salary / 365) * totalCal);
+
+  return { ldw, blocks, ldop, ctbe, totalCal, totalPen, sal, buf, over };
+}
+
+// ─── Main calculate ───────────────────────────────────────────────────────────
+function calculate() {
+  const ra  = parseDate(document.getElementById('royalAssent').value);
+  const ap  = parseDate(document.getElementById('approvalDate').value);
+  const grp = document.getElementById('group').value;
+  const yrsE = parseFloat(document.getElementById('yearsEmployment').value) || 0;
+  const yrsP = parseFloat(document.getElementById('yearsPensionable').value) || 0;
+  const sal  = parseFloat(document.getElementById('salary').value) || 0;
+  const cLDW = parseDate(document.getElementById('lastDayWork').value);
+  const accOn = document.getElementById('accrualToggle').checked;
+  const accRate = parseFloat(document.getElementById('accrualRate').value) || 0;
+  const bd   = parseDate(document.getElementById('birthdate').value);
+
+  // Validation
+  const errors = [];
+  if (!ra)  errors.push('Royal Assent date is required.');
+  if (!ap)  errors.push('Expected Deputy Head approval date is required.');
+  if (!grp) errors.push('Pension group selection is required.');
+  if (!sal) errors.push('Annual salary is required.');
+  if (!bd && !document.getElementById('age').value)
+    errors.push('Date of birth or age is required.');
+
+  if (errors.length) {
+    document.getElementById('results').innerHTML =
+      errors.map(e => `<div class="alert alert-warn"><span class="alert-icon">⚠</span><div class="alert-content">${e}</div></div>`).join('');
+    return;
+  }
+
+  const inf  = computeInForce(ra);
+  const dl120 = addDays(inf, 120);
+  const dl300 = addDays(inf, 300);
+
+  // Age at projected CTBE
+  const leaves0 = getLeaveBalances();
+  const proj    = addDays(ap, leaves0.reduce((s,l) => s + l.calDays, 0) + 1);
+  const ageDerived = bd ? calcAgeAt(bd, proj) : null;
+  const age = (ageDerived !== null && ageDerived !== undefined)
+    ? ageDerived : (parseFloat(document.getElementById('age').value) || 0);
+
+  // Cross-field warnings
+  const warnings = [];
+  if (ap < inf) warnings.push(`Your approval date (${fmtDate(ap)}) is before the legislation comes into force (${fmtDate(inf)}).`);
+  if (ap > dl120) warnings.push(`Your approval date (${fmtDate(ap)}) is after the day-120 Treasury Board approval cutoff (${fmtDate(dl120)}). Your eligibility may be affected.`);
+  if (cLDW && cLDW < ap) warnings.push(`Your custom last day of work is before your approval date. The approval date will be used instead.`);
+
+  // Eligibility
+  const minAge = grp === '1' ? 50 : 55;
+  const eligIssues = [];
+  if (age < minAge)  eligIssues.push(`Group ${grp} members must be at least ${minAge} years old at CTBE. Your estimated age: ${age}.`);
+  if (yrsE < 10)     eligIssues.push(`A minimum of 10 years of public service employment is required. You entered: ${yrsE}.`);
+  if (yrsP < 2)      eligIssues.push(`A minimum of 2 years of pensionable service is required. You entered: ${yrsP}.`);
+
+  const leaves = getLeaveBalances();
+  const totalCal = leaves.reduce((s,l) => s + l.calDays, 0);
+  const extraVac = accOn && accRate > 0 ? estimateAccrual(leaves, accRate) : 0;
+  const totalFull = totalCal + extraVac;
+
+  const sickBalWd  = parseFloat(document.getElementById('bal-sick').value) || 0;
+  const sickPlanWd = parseFloat(document.getElementById('sick-planned-days').value) || 0;
+  const sickUsedWd = sickPlanWd > 0 ? Math.min(sickPlanWd, sickBalWd) : sickBalWd;
+  const sickUsedCal = wdToCal(sickUsedWd);
+
+  // Three scenarios
+  const ldwC = new Date(ap);
+  let ldwO = addDays(dl300, -(totalFull + 1));
+  if (ldwO < ap) ldwO = new Date(ap);
+  const customValid = cLDW && cLDW >= ap;
+  const ldwX = customValid
+    ? new Date(cLDW)
+    : addDays(ldwC, Math.floor(daysBetween(ldwC, ldwO) / 2));
+
+  const s1 = buildScenario(ldwC, leaves, extraVac, sal, dl300);
+  const s2 = buildScenario(ldwO, leaves, extraVac, sal, dl300);
+  const s3 = buildScenario(ldwX, leaves, extraVac, sal, dl300);
+
+  s1.salWasted = Math.max(0, s2.sal - s1.sal);
+  s1.penWasted = Math.max(0, s2.totalPen - s1.totalPen);
+  s2.salWasted = 0; s2.penWasted = 0;
+  s3.salWasted = Math.max(0, s2.sal - s3.sal);
+  s3.penWasted = Math.max(0, s2.totalPen - s3.totalPen);
+
+  const scenarios = [
+    { name:'Conservative', sub:'Depart at approval date',       data:s1, type:'conservative' },
+    { name:'Optimal',      sub:'Maximum leave window',          data:s2, type:'optimal'      },
+    { name:'Custom',       sub: customValid ? 'Your chosen date' : 'Midpoint estimate', data:s3, type:'custom' },
+  ];
+
+  renderResults({ scenarios, eligIssues, warnings, inf, dl120, dl300, leaves, extraVac, sickUsedWd, sickUsedCal, sickPlanWd, sickBalWd });
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderResults({ scenarios, eligIssues, warnings, inf, dl120, dl300, leaves, extraVac, sickUsedWd, sickUsedCal, sickPlanWd, sickBalWd }) {
+  let html = '';
+
+  // Eligibility
+  if (eligIssues.length) {
+    html += eligIssues.map(i => `
+      <div class="alert alert-error">
+        <span class="alert-icon">✕</span>
+        <div class="alert-content">${i}</div>
+      </div>`).join('');
+  } else {
+    html += `
+      <div class="alert alert-good">
+        <span class="alert-icon">✓</span>
+        <div class="alert-content"><strong>Eligibility confirmed</strong>You appear to meet the basic ERI eligibility criteria based on the information provided.</div>
+      </div>`;
+  }
+
+  warnings.forEach(w => {
+    html += `<div class="alert alert-warn"><span class="alert-icon">⚠</span><div class="alert-content">${w}</div></div>`;
+  });
+
+  if (extraVac > 0) {
+    html += `<div class="alert alert-info"><span class="alert-icon">ℹ</span><div class="alert-content">Vacation accrual: approximately ${extraVac} additional calendar days have been added to all scenarios.</div></div>`;
+  }
+
+  if (sickUsedCal > 0) {
+    const certNote = sickUsedWd > 5
+      ? ' Extended sick leave beyond five consecutive days will likely require a medical certificate — plan accordingly and consult your physician if applicable.'
+      : '';
+    const planNote = sickPlanWd > 0 && sickPlanWd < sickBalWd
+      ? `Scenarios use your planned ${sickUsedWd} of ${sickBalWd} sick days.`
+      : `Full sick leave balance of ${sickUsedWd} days included in scenarios.`;
+    html += `<div class="alert alert-info"><span class="alert-icon">ℹ</span><div class="alert-content">${planNote}${certNote}</div></div>`;
+  }
+
+  // Cutting it close alarm
+  const tight = scenarios.filter(sc => sc.data.buf !== null && sc.data.buf >= 0 && sc.data.buf < 14);
+  if (tight.length) {
+    html += `
+      <div class="alert alert-cutting">
+        <span class="alert-icon">⚠</span>
+        <div class="alert-content">
+          <strong>Note: narrow deadline window</strong>
+          ${tight.map(s => s.name).join(' and ')} — cease-to-employ date falls within 14 days of the day-300 deadline. Processing delays could put you at risk. Consider building in additional buffer time.
+        </div>
+      </div>`;
+  }
+
+  // Deadline summary bar
+  html += `
+    <div class="deadline-summary">
+      <div class="deadline-summary-title">Key ERI Program Deadlines</div>
+      <div class="deadline-summary-grid">
+        <div class="ds-item"><label>Legislation in force</label><span>${fmtDate(inf)}</span></div>
+        <div class="ds-item"><label>TB Approval cutoff (day 120)</label><span>${fmtDate(dl120)}</span></div>
+        <div class="ds-item"><label>Latest cease-to-employ (day 300)</label><span class="critical">${fmtDate(dl300)}</span></div>
+      </div>
+    </div>`;
+
+  if (leaves.length === 0) {
+    html += `<div class="alert alert-info"><span class="alert-icon">ℹ</span><div class="alert-content">No leave balances entered — scenarios show date calculations only. Enter leave balances for a complete analysis.</div></div>`;
+  }
+
+  // Scenario cards
+  html += `<div class="scenarios-grid">`;
+  scenarios.forEach((sc, i) => {
+    const d = sc.data;
+    const isRec = sc.type === 'optimal' && !d.over;
+    const cardClass = d.over ? 'sc-danger' : isRec ? 'sc-recommended' : '';
+    const badge = d.over
+      ? `<span class="sc-badge sc-badge-bust">Exceeds deadline</span>`
+      : isRec ? `<span class="sc-badge sc-badge-rec">★ Recommended</span>`
+      : `<span class="sc-badge sc-badge-norm">Option ${['A','B','C'][i]}</span>`;
+
+    html += `
+      <div class="scenario-card ${cardClass}">
+        <div class="sc-header">
+          <div>
+            <span class="sc-type-tag">${sc.type}</span>
+            <div class="sc-name">${sc.name}</div>
+            <div class="sc-sub">${sc.sub}</div>
+          </div>
+          ${badge}
+        </div>
+        <div class="sc-body">
+          ${d.over ? `<div class="alert alert-error" style="font-size:12px;padding:8px 12px;margin-bottom:10px;"><span class="alert-icon">✕</span><div class="alert-content">CTBE exceeds the day-300 deadline by ${Math.abs(d.buf)} day(s).</div></div>` : ''}
+          <table class="stat-table">
+            <tr><td class="stat-label">Last day of work</td><td class="stat-val">${fmtDate(d.ldw)}</td></tr>
+            <tr><td class="stat-label">Last day on payroll</td><td class="stat-val ${d.over ? 'danger' : 'highlight'}">${fmtDate(d.ldop)}</td></tr>
+            <tr><td class="stat-label">Cease to be employed</td><td class="stat-val ${d.over ? 'danger' : ''}">${fmtDate(d.ctbe)}</td></tr>
+            <tr><td class="stat-label">Total paid days off work</td><td class="stat-val success">${d.totalCal} calendar days</td></tr>
+            <tr><td class="stat-label">Pensionable days gained</td><td class="stat-val">${d.totalPen} days <span style="font-size:11px;color:var(--text-light)">(${(d.totalPen/365).toFixed(2)} yrs)</span></td></tr>
+            <tr><td class="stat-label">Salary earned during leave</td><td class="stat-val ${isRec ? 'highlight' : 'success'}">$${d.sal.toLocaleString('en-CA')}</td></tr>
+            ${d.buf !== null ? `<tr><td class="stat-label">Buffer before day-300</td><td class="stat-val ${d.buf < 0 ? 'danger' : d.buf < 14 ? 'warning' : 'success'}">${d.buf < 0 ? Math.abs(d.buf) + ' days over' : d.buf + ' days'}</td></tr>` : ''}
+          </table>
+
+          <div class="wasted-panel ${d.salWasted === 0 && d.penWasted === 0 ? 'clean' : ''}">
+            <div class="wasted-label">${d.salWasted === 0 && d.penWasted === 0 ? 'Compared to Optimal' : 'Foregone vs Optimal'}</div>
+            <div class="wasted-value">
+              ${d.salWasted === 0 && d.penWasted === 0
+                ? 'Nothing foregone — this is the maximum payout.'
+                : `$${d.salWasted.toLocaleString('en-CA')} salary · ${d.penWasted} pensionable days`}
+            </div>
+          </div>
+
+          ${d.blocks.length > 0 ? `
+            <div class="leave-seq-head">Leave Sequence</div>
+            ${d.blocks.map(b => `
+              <div class="leave-block-row" style="background:${b.bg};border-left-color:${b.color};">
+                <span class="lb-name" style="color:${b.color};">${b.label}${b.accruedDays > 0 ? ' <span style="font-weight:400;font-size:10px;">(+accrued)</span>' : ''}</span>
+                <span class="lb-right">
+                  <span class="lb-days">${b.calDays}d</span>
+                  <span class="lb-dates">${fmtDateShort(b.start)} → ${fmtDateShort(b.end)}</span>
+                </span>
+              </div>`).join('')}
+          ` : ''}
+        </div>
+      </div>`;
+  });
+  html += `</div>`;
+
+  // Timeline
+  html += renderTimeline(scenarios, dl300);
+
+  // Notes
+  html += `
+    <div class="notes-card">
+      <h3>Notes &amp; Assumptions</h3>
+      <ul>
+        <li>Leave is deployed sequentially beginning the day after the last day of work. Non-pensionable leave is placed first to maximise the pensionable service extension.</li>
+        <li>The <strong>Optimal</strong> scenario calculates the latest last day of work such that the cease-to-employ date falls on or before the day-300 deadline.</li>
+        <li>"Foregone vs Optimal" reflects salary earned and pensionable days accumulated that would be available under the Optimal scenario but not under the given scenario.</li>
+        <li>Salary is calculated on an annual basis (salary ÷ 365 × calendar days). All leave is expressed in calendar days including weekends and statutory holidays.</li>
+        <li>This tool is for planning purposes only. Verify all calculations with your departmental HR and the Government of Canada Pension Centre before making any decisions.</li>
+      </ul>
+    </div>`;
+
+  document.getElementById('results').innerHTML = html;
+}
+
+// ─── Timeline ─────────────────────────────────────────────────────────────────
+function renderTimeline(scenarios, dl300) {
+  const rangeStart = new Date(scenarios[0].data.ldw);
+  const rangeEnd   = addDays(dl300, 14);
+  const span       = daysBetween(rangeStart, rangeEnd);
+  if (span <= 0) return '';
+
+  const pct = d => Math.max(0, Math.min(100, daysBetween(rangeStart, d) / span * 100));
+  const dlPct = pct(dl300);
+
+  let html = `<div class="timeline-card"><h3>Timeline Comparison</h3>`;
+
+  scenarios.forEach(sc => {
+    const d = sc.data;
+    const ws = pct(d.ldw), we = pct(d.ldop);
+    html += `
+      <div class="tl-row">
+        <div class="tl-row-label">
+          <strong>${sc.name}</strong>
+          <span>CTBE: ${fmtDateShort(d.ctbe)}</span>
+        </div>
+        <div class="tl-bar-wrap">
+          <div class="tl-bar">
+            <div class="tl-deadline" style="left:${dlPct}%">
+              <span class="tl-deadline-label">Day 300</span>
+            </div>`;
+
+    if (we > ws + 0.5) {
+      html += `<div class="tl-seg" style="left:${ws}%;width:${we-ws}%;background:#c8c7c0;" title="Working period">
+        <span style="font-size:8px;color:#555;">Working</span>
+      </div>`;
+    }
+    d.blocks.forEach(b => {
+      const bs = pct(b.start);
+      const bw = Math.max(pct(addDays(b.end,1)) - bs, 0.4);
+      html += `<div class="tl-seg" style="left:${bs}%;width:${bw}%;background:${b.color};" title="${b.label}: ${b.calDays} cal days">
+        ${bw > 4 ? `<span style="font-size:9px;">${b.calDays}d</span>` : ''}
+      </div>`;
+    });
+    html += `</div></div></div>`;
+  });
+
+  const shownIds   = new Set(scenarios.flatMap(sc => sc.data.blocks.map(b => b.id)));
+  const shownTypes = LEAVE_TYPES.filter(lt => shownIds.has(lt.id));
+
+  html += `<div class="tl-legend">
+    <div class="tl-legend-item"><div class="tl-legend-dot" style="background:#c8c7c0;"></div>Working period</div>
+    ${shownTypes.map(lt => `<div class="tl-legend-item"><div class="tl-legend-dot" style="background:${lt.color};"></div>${lt.label}</div>`).join('')}
+    <div class="tl-legend-item"><div class="tl-legend-dot" style="background:var(--error);width:3px;border-radius:0;"></div>Day-300 deadline</div>
+  </div></div>`;
+
+  return html;
+}
+
+// ─── Accordion ───────────────────────────────────────────────────────────────
+function toggleAccordion(id) {
+  const panels = ['acc-dates','acc-profile','acc-leave'];
+  panels.forEach(pid => {
+    const el = document.getElementById(pid);
+    const isTarget = pid === id;
+    const willOpen = isTarget && !el.classList.contains('is-open');
+    el.classList.toggle('is-open', isTarget && willOpen);
+    el.querySelector('.accordion-trigger').setAttribute('aria-expanded', isTarget && willOpen);
+  });
+}
+
+// Mark a panel complete and update its summary line
+function markAccordionComplete(id, summaryText) {
+  const el = document.getElementById(id);
+  if (summaryText) {
+    el.classList.add('is-complete');
+    const s = document.getElementById(id + '-summary');
+    if (s) s.textContent = summaryText;
+  } else {
+    el.classList.remove('is-complete');
+  }
+}
+
+// Auto-advance: mark dates complete when both filled, then open profile
+document.getElementById('royalAssent').addEventListener('change', checkDatesComplete);
+document.getElementById('approvalDate').addEventListener('change', checkDatesComplete);
+
+function checkDatesComplete() {
+  const ra = document.getElementById('royalAssent').value;
+  const ap = document.getElementById('approvalDate').value;
+  if (ra && ap) {
+    markAccordionComplete('acc-dates', `RA: ${fmtDateShort(parseDate(ra))} · Approval: ${fmtDateShort(parseDate(ap))}`);
+    // Auto-open profile if it hasn't been touched yet
+    const profile = document.getElementById('acc-profile');
+    if (!profile.classList.contains('is-open') && !profile.classList.contains('is-complete')) {
+      toggleAccordion('acc-profile');
+    }
+  } else {
+    markAccordionComplete('acc-dates', null);
+  }
+}
+
+// Mark profile complete when key fields filled
+['group','salary','yearsEmployment'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', checkProfileComplete);
+});
+document.getElementById('birthdate').addEventListener('change', checkProfileComplete);
+
+function checkProfileComplete() {
+  const grp = document.getElementById('group').value;
+  const sal = document.getElementById('salary').value;
+  const yrs = document.getElementById('yearsEmployment').value;
+  if (grp && sal && yrs) {
+    const grpLabel = grp === '1' ? 'Group 1' : 'Group 2';
+    const salFmt   = '$' + parseInt(sal).toLocaleString('en-CA');
+    markAccordionComplete('acc-profile', `${grpLabel} · ${salFmt} · ${yrs} yrs employment`);
+    // Auto-open leave if not yet touched
+    const leave = document.getElementById('acc-leave');
+    if (!leave.classList.contains('is-open') && !leave.classList.contains('is-complete')) {
+      toggleAccordion('acc-leave');
+    }
+  } else {
+    markAccordionComplete('acc-profile', null);
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+buildLeaveRows();
+</script>
+</body>
+</html>
